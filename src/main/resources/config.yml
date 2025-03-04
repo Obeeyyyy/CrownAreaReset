@@ -1,0 +1,11 @@
+#
+# Thank you for downloading CrownAreaReset!
+# If you have any questions, suggestions or need help, please do not hesitate and
+# join our discord: https://dsc.gg/crowndevelopment to ask for help!
+# We are there to assist you.
+#
+
+# enable the regen broadcast messages
+area-regen-broadcast: true
+# the radius from the areas center location the messages will be broadcasted
+area-regen-broadcast-radius: 250

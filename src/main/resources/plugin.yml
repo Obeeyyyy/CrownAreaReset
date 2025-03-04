@@ -1,0 +1,10 @@
+name: CrownAreaReset
+version: 1.0.0
+author: Obey
+website: dsg.gg/crowndevelopment
+
+main: de.obey.crown.noobf.CrownAreaReset
+api-version: '1.20'
+commands:
+
+
