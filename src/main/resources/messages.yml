@@ -1,2 +1,8 @@
 messages:
-  area-regenerated: "%prefix% "
+  area-regenerated: "%prefix% The %area% %white%area was regenerated in %time%ms."
+  area-regen-timer: "%prefix% The %area% %white%area will reset in %accent%%time%%white%."
+  area-exists-already: "%prefix% There alredy is an area called %accent%%area%%white%."
+  area-does-not-exist: "%prefix% There is no area called %area%."
+  area-created: "%prefix% You have created the %area% area."
+  area-force-reset: "%prefix% You have force resetred the %accent%%area%%white% area."
+  area-edit: "%prefix% You have edited the %value% for the %area% area."

@@ -7,5 +7,3 @@
 
 # enable the regen broadcast messages
 area-regen-broadcast: true
-# the radius from the areas center location the messages will be broadcasted
-area-regen-broadcast-radius: 250
