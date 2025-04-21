@@ -1,7 +1,7 @@
 /* CrownPlugins - CrownAreaReset */
 /* 05.03.2025 - 00:19 */
 
-package de.obey.crown.handler;
+package de.obey.crown.arena;
 
 import com.google.common.collect.Maps;
 import com.sk89q.worldedit.EditSession;
@@ -25,9 +25,7 @@ import de.obey.crown.core.util.FileUtil;
 import de.obey.crown.core.util.TextUtil;
 import de.obey.crown.noobf.CrownAreaReset;
 import de.obey.crown.noobf.PluginConfig;
-import de.obey.crown.object.Area;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -47,12 +45,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-@RequiredArgsConstructor @NonNull
+@RequiredArgsConstructor
 public final class AreaHandler {
 
     private final PluginConfig pluginConfig;
     private final Messanger messanger;
-    private final ExecutorService executor;
 
     @Getter
     private BukkitTask runnable;
@@ -86,6 +83,11 @@ public final class AreaHandler {
         return areas.containsKey(areaName);
     }
 
+    public void deleteArea(final String areaName) {
+        areas.remove(areaName);
+        saveAreas();
+    }
+
     public void createArea(final Player player, final String areaName) {
         final Area area = new Area();
 
@@ -114,18 +116,21 @@ public final class AreaHandler {
                     continue;
 
                 if(isPlayerInRegion(player, area.getAreaName())) {
-                    player.setVelocity(new Vector(0, 40, 0));
+                    final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 10: 0;
+                    player.setVelocity(new Vector(0, (20 + boost), 0));
 
                     player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 10));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 4, 10));
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 20 * 10, 1));
 
-                    player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_TELEPORT, 0.2f, 3f);
-                    player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.2f, 3f);
+                    player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_TELEPORT, 0.4f, 3f);
+                    player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.4f, 3f);
                 }
             }
 
-            pasteSchematic(area);
+            Bukkit.getScheduler().runTaskLater(CrownAreaReset.getInstance(), () -> {
+                pasteSchematic(area);
+            }, 10);
         });
     }
 
@@ -191,8 +196,10 @@ public final class AreaHandler {
                 if (!(entity instanceof Player player))
                     continue;
 
-                if (isPlayerInRegion(player, area.getAreaName()))
+                if (isPlayerInRegion(player, area.getAreaName())) {
                     messanger.sendMessage(player, messageKey, keys, values);
+                    player.playSound(player.getLocation(), Sound.ENTITY_ENDER_EYE_DEATH, 0.2f, 3f);
+                }
             }
         });
     }
@@ -214,6 +221,8 @@ public final class AreaHandler {
 
     public void loadAreas() {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(pluginConfig.getConfigFile());
+
+        areas.clear();
 
         if(!configuration.contains("area"))
             return;
@@ -244,6 +253,8 @@ public final class AreaHandler {
 
     public void saveAreas() {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(pluginConfig.getConfigFile());
+
+        configuration.set("area",null);
 
         if(areas.isEmpty())
             return;

@@ -1,18 +1,14 @@
 /* CrownPlugins - CrownAreaReset */
 /* 05.03.2025 - 03:06 */
 
-package de.obey.crown.command;
+package de.obey.crown.arena;
 
 import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.core.handler.LocationHandler;
-import de.obey.crown.core.util.TextUtil;
-import de.obey.crown.handler.AreaHandler;
 import de.obey.crown.noobf.CrownAreaReset;
 import de.obey.crown.noobf.PluginConfig;
-import de.obey.crown.object.Area;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -21,7 +17,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.naming.PartialResultException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +39,7 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
 
                 pluginConfig.loadConfig();
                 pluginConfig.loadMessages();
+                areaHandler.loadAreas();
 
                 messanger.sendMessage(sender, "plugin-reloaded", new String[]{"plugin"}, CrownAreaReset.getInstance().getName());
 
@@ -82,6 +78,21 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
 
                 areaHandler.resetArea(areaHandler.getAreas().get(areaName));
                 messanger.sendMessage(sender, "area-force-reset", new String[]{"area"}, areaName);
+
+                return false;
+            }
+
+            if (args[0].equalsIgnoreCase("delete")) {
+                final String areaName = args[1];
+
+                if(!areaHandler.exist(areaName)) {
+                    messanger.sendMessage(sender, "area-does-not-exist", new String[]{"area"}, areaName);
+                    return false;
+                }
+
+                areaHandler.deleteArea(areaName);
+                areaHandler.saveAreas();
+                messanger.sendMessage(sender, "area-deleted", new String[]{"area"}, areaName);
 
                 return false;
             }
@@ -164,6 +175,7 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
                 list.add("reload");
 
             list.add("create");
+            list.add("delete");
             list.add("setlocation");
             list.add("setdisplayname");
             list.add("setresettime");
@@ -174,7 +186,9 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
             if(args[0].equalsIgnoreCase("setlocation") ||
                     args[0].equalsIgnoreCase("setdisplayname")||
                     args[0].equalsIgnoreCase("setresettime") ||
-                    args[0].equalsIgnoreCase("reset")) {
+                    args[0].equalsIgnoreCase("delete") ||
+                    args[0].equalsIgnoreCase("reset"))
+            {
                 list.addAll(areaHandler.getAreas().keySet());
 
             } else if(args[0].equalsIgnoreCase("create")) {

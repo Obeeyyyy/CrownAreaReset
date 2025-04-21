@@ -4,5 +4,6 @@ messages:
   area-exists-already: "%prefix% There alredy is an area called %accent%%area%%white%."
   area-does-not-exist: "%prefix% There is no area called %area%."
   area-created: "%prefix% You have created the %area% area."
-  area-force-reset: "%prefix% You have force resetred the %accent%%area%%white% area."
+  area-force-reset: "%prefix% You have force resetted the %accent%%area%%white% area."
   area-edit: "%prefix% You have edited the %value% for the %area% area."
+  area-deleted: "%prefix% You have deleted the %area% area."

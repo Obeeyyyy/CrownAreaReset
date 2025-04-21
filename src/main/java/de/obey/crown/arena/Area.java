@@ -1,7 +1,7 @@
 /* CrownPlugins - CrownAreaReset */
 /* 04.03.2025 - 16:08 */
 
-package de.obey.crown.object;
+package de.obey.crown.arena;
 
 import lombok.Getter;
 import lombok.Setter;
