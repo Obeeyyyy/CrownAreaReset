@@ -20,6 +20,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
 import de.obey.crown.core.data.plugin.Messanger;
+import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.util.FileUtil;
 import de.obey.crown.core.util.TextUtil;
@@ -50,6 +51,7 @@ public final class AreaHandler {
 
     private final PluginConfig pluginConfig;
     private final Messanger messanger;
+    private final Sounds sounds;
 
     @Getter
     private BukkitTask runnable;
@@ -111,20 +113,22 @@ public final class AreaHandler {
         area.setLastReset(System.currentTimeMillis());
 
         Bukkit.getScheduler().runTask(CrownAreaReset.getInstance(), () -> {
-            for (final Entity entity : area.getCenter().getWorld().getEntities()) {
-                if(!(entity instanceof Player player))
-                    continue;
+            if(pluginConfig.isEnablePlayerPushbackOnRegen()) {
+                for (final Entity entity : area.getCenter().getWorld().getEntities()) {
+                    if (!(entity instanceof Player player))
+                        continue;
 
-                if(isPlayerInRegion(player, area.getAreaName())) {
-                    final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 10: 0;
-                    player.setVelocity(new Vector(0, (20 + boost), 0));
+                    if (isPlayerInRegion(player, area.getAreaName())) {
+                        final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 10 : 0;
+                        player.setVelocity(new Vector(0, (20 + boost), 0));
 
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 10));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 4, 10));
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 20 * 10, 1));
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 10));
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 4, 10));
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 20 * 10, 1));
 
-                    player.playSound(player.getLocation(), Sound.ENTITY_SHULKER_TELEPORT, 0.4f, 3f);
-                    player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 0.4f, 3f);
+                        sounds.playSoundToPlayer(player, "pushback-1");
+                        sounds.playSoundToPlayer(player, "pushback-2");
+                    }
                 }
             }
 
@@ -198,7 +202,7 @@ public final class AreaHandler {
 
                 if (isPlayerInRegion(player, area.getAreaName())) {
                     messanger.sendMessage(player, messageKey, keys, values);
-                    player.playSound(player.getLocation(), Sound.ENTITY_ENDER_EYE_DEATH, 0.2f, 3f);
+                    sounds.playSoundToPlayer(player, "area-reset");
                 }
             }
         });

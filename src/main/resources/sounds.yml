@@ -1,0 +1,4 @@
+sounds:
+  pushback-1: "ENTITY_SHULKER_TELEPORT:0.5:3.0"
+  pushback-2: "BLOCK_GLASS_BREAK:0.5:3.0"
+  area-reset: "ENTITY_ENDER_EYE_DEATH:0.2:3.0"

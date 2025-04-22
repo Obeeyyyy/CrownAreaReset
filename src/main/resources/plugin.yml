@@ -1,7 +1,7 @@
 name: CrownAreaReset
-version: 1.0.1
+version: 1.0.2
 author: Obey
-website: dsg.gg/crowndevelopment
+website: https://builtbybit.com/resources/areareset.61809/
 
 main: de.obey.crown.noobf.CrownAreaReset
 api-version: '1.20'

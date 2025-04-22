@@ -13,7 +13,7 @@ public final class CoreStart implements Listener {
 
     @EventHandler
     public void on(final CoreStartEvent event) {
-        Bukkit.getLogger().info("[^] Thank you for using " + CrownAreaReset.getInstance().getName() + " made by @Obeeyyyy!");
+        event.sendStartupMessage(CrownAreaReset.getInstance());
         CrownAreaReset.getInstance().load();
     }
 }

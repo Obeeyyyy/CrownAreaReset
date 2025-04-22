@@ -7,7 +7,6 @@ import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.noobf.CrownAreaReset;
 import de.obey.crown.noobf.PluginConfig;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -15,13 +14,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@RequiredArgsConstructor @NonNull
+@RequiredArgsConstructor
 public final class AreaResetCommand implements CommandExecutor, TabCompleter {
 
     private final PluginConfig pluginConfig;
@@ -142,9 +140,9 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
                     return false;
                 }
 
-                final long millis = messanger.isValidInt(sender, args[2]);
+                final long millis = messanger.isValidInt(sender, args[2], 100);
 
-                if(millis <= 0)
+                if(millis < 100)
                     return false;
 
                 final Area area = areaHandler.getAreas().get(areaName);

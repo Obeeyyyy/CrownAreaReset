@@ -7,3 +7,6 @@
 
 # enable the regen broadcast messages
 area-regen-broadcast: true
+
+# disable this if you dont want the players to be pushed up when the area is regenerating
+enable-player-pushback-on-regen: true

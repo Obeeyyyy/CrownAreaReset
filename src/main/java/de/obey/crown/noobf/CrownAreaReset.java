@@ -6,6 +6,7 @@ package de.obey.crown.noobf;
 import de.obey.crown.arena.AreaResetCommand;
 import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.arena.AreaHandler;
+import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.listener.CoreStart;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,16 +21,20 @@ public final class CrownAreaReset extends JavaPlugin {
 
     private PluginConfig pluginConfig;
     private Messanger messanger;
+    private Sounds sounds;
 
     private AreaHandler areaHandler;
-    
-    @Override
-    public void onEnable() {
 
+    @Override
+    public void onLoad() {
         pluginConfig = new PluginConfig(this);
         messanger = pluginConfig.getMessanger();
+        sounds = pluginConfig.getSounds();
+    }
 
-        areaHandler = new AreaHandler(pluginConfig, messanger);
+    @Override
+    public void onEnable() {
+        areaHandler = new AreaHandler(pluginConfig, messanger, sounds);
         areaHandler.run();
 
         new Placeholders(areaHandler).register();

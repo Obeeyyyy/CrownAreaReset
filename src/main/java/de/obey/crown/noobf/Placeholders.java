@@ -38,7 +38,7 @@ public final class Placeholders extends PlaceholderExpansion {
     }
 
     @Override
-    public @Nullable String onPlaceholderRequest(final Player player, @NotNull String params) {
+    public @NotNull String onPlaceholderRequest(final Player player, @NotNull String params) {
         final String[] args = params.split("_");
 
         if(args.length == 2) {
@@ -52,7 +52,7 @@ public final class Placeholders extends PlaceholderExpansion {
                 if(area == null)
                     return "invalid area";
 
-                return TextUtil.formatTimeStringNoMilliSeconds(area.getResetTime() - (System.currentTimeMillis() - area.getLastReset()));
+                return TextUtil.formatTimeString(area.getResetTime() - (System.currentTimeMillis() - area.getLastReset()), true, false);
             }
         }
 
