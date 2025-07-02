@@ -4,6 +4,7 @@
 package de.obey.crown.noobf;
 
 import de.obey.crown.arena.AreaResetCommand;
+import de.obey.crown.core.data.plugin.Log;
 import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.arena.AreaHandler;
 import de.obey.crown.core.data.plugin.sound.Sounds;
@@ -19,6 +20,8 @@ public final class CrownAreaReset extends JavaPlugin {
         return getPlugin(CrownAreaReset.class);
     }
 
+    public static Log log = new Log();
+
     private PluginConfig pluginConfig;
     private Messanger messanger;
     private Sounds sounds;
@@ -27,6 +30,7 @@ public final class CrownAreaReset extends JavaPlugin {
 
     @Override
     public void onLoad() {
+        log.setPlugin(this);
         pluginConfig = new PluginConfig(this);
         messanger = pluginConfig.getMessanger();
         sounds = pluginConfig.getSounds();

@@ -3,6 +3,7 @@
 
 package de.obey.crown.arena;
 
+import com.fastasyncworldedit.core.FaweAPI;
 import com.google.common.collect.Maps;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.WorldEdit;
@@ -30,7 +31,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -42,9 +42,9 @@ import org.bukkit.util.Vector;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 @RequiredArgsConstructor
 public final class AreaHandler {
@@ -94,7 +94,7 @@ public final class AreaHandler {
         final Area area = new Area();
 
         area.setAreaName(areaName);
-        area.setSchematicName(areaName);
+        area.setSchematicNames(List.of(areaName));
         area.setDisplayName("&f&l" + areaName);
         area.setResetTime(1000 * 60 * 20);
         area.setCenter(player.getLocation());
@@ -139,59 +139,63 @@ public final class AreaHandler {
     }
 
     private void pasteSchematic(final Area area) {
-        final String name = area.getAreaName();
-        final Location location = area.getCenter();
+        FaweAPI.getTaskManager().async(() -> {
+            final String locationName = area.getAreaName();
+            final Location location = area.getCenter();
 
-        if(location == null) {
-            Bukkit.getLogger().warning("[CrownAreaReset] Could not find '" + name + " location.'");
-            return;
-        }
-
-        final long started = System.currentTimeMillis();
-        final File schematicFile = new File("./plugins/FastAsyncWorldEdit/schematics/" + name + ".schem");
-
-        if (!schematicFile.exists()) {
-            Bukkit.getLogger().warning("[CrownAreaReset] Could not find '" + name + ".schematic'");
-            return;
-        }
-
-        try (FileInputStream fis = new FileInputStream(schematicFile)) {
-            ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
-            if (format == null) {
-                Bukkit.getLogger().warning("[CrownAreaReset] Invalid format '" + name + ".schematic'");
+            if (location == null) {
+                CrownAreaReset.log.warn("could not find location named '" + locationName + "'");
                 return;
             }
 
-            final Clipboard clipboard = format.getReader(fis).read();
+            final long started = System.currentTimeMillis();
 
-            final BlockVector3 pasteLocation = BlockVector3.at(
-                    location.getBlockX(),
-                    location.getBlockY(),
-                    location.getBlockZ()
-            );
+            final String schematicName = area.getRandomSchematicName();
+            final File schematicFile = new File("./plugins/FastAsyncWorldEdit/schematics/" + schematicName + ".schem");
 
-            com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(location.getWorld());
+            if (!schematicFile.exists()) {
+                CrownAreaReset.log.warn("could not find schematic '" + schematicName + ".schem'");
+                return;
+            }
 
-            try (EditSession editSession = WorldEdit.getInstance().newEditSession(adaptedWorld)) {
-                final ClipboardHolder holder = new ClipboardHolder(clipboard);
+            try (FileInputStream fis = new FileInputStream(schematicFile)) {
+                final ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
+                if (format == null) {
+                    CrownAreaReset.log.warn("invalid format for '" + schematicName + ".schem'");
+                    return;
+                }
 
-                Operations.complete(holder
-                        .createPaste(editSession)
-                        .to(pasteLocation)
-                        .ignoreAirBlocks(false)
-                        .build()
+                final Clipboard clipboard = format.getReader(fis).read();
+
+                final BlockVector3 pasteLocation = BlockVector3.at(
+                        location.getBlockX(),
+                        location.getBlockY(),
+                        location.getBlockZ()
                 );
-            } catch (WorldEditException e) {
-                throw new RuntimeException(e);
-            }
 
-            if(pluginConfig.isBroadcasetRegen()) {
-                broadcadstMessageToRegions(area, "area-regenerated", new String[]{"area", "time"}, area.getDisplayName(), TextUtil.formatNumber((System.currentTimeMillis() - started)));
-            }
+                final com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(location.getWorld());
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                try (EditSession editSession = WorldEdit.getInstance().newEditSession(adaptedWorld)) {
+                    final ClipboardHolder holder = new ClipboardHolder(clipboard);
+
+                    Operations.complete(holder
+                            .createPaste(editSession)
+                            .to(pasteLocation)
+                            .ignoreAirBlocks(false)
+                            .build()
+                    );
+                } catch (WorldEditException e) {
+                    throw new RuntimeException(e);
+                }
+
+                if (pluginConfig.isBroadcasetRegen()) {
+                    broadcadstMessageToRegions(area, "area-regenerated", new String[]{"area", "time"}, area.getDisplayName(), TextUtil.formatNumber((System.currentTimeMillis() - started)));
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void broadcadstMessageToRegions(final Area area, final String messageKey, final String[] keys, final String... values) {
@@ -210,9 +214,9 @@ public final class AreaHandler {
 
     private boolean isPlayerInRegion(final Player player, final String regionName) {
         final Location loc = player.getLocation();
-        RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-        RegionQuery query = container.createQuery();
-        ApplicableRegionSet regions = query.getApplicableRegions(BukkitAdapter.adapt(loc));
+        final RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
+        final RegionQuery query = container.createQuery();
+        final ApplicableRegionSet regions = query.getApplicableRegions(BukkitAdapter.adapt(loc));
 
         for (ProtectedRegion region : regions) {
             if (region.getId().equalsIgnoreCase(regionName)) {
@@ -239,13 +243,13 @@ public final class AreaHandler {
 
                 area.setAreaName(areaName);
                 area.setDisplayName(FileUtil.getString(configuration, "area." + areaName + ".displayName", "&f&l" + areaName));
-                area.setSchematicName(FileUtil.getString(configuration, "area." + areaName + ".schematicName", areaName));
+                area.setSchematicNames(FileUtil.getStringArrayList(configuration, "area." + areaName + ".schematics", List.of(areaName)));
                 area.setLastReset(FileUtil.getLong(configuration, "area." + areaName + ".lastReset", System.currentTimeMillis()));
                 area.setResetTime(FileUtil.getLong(configuration, "area." + areaName + ".resetTime", 50000));
 
                 final Location center = LocationHandler.getLocation(areaName);
                 if (center == null) {
-                    Bukkit.getLogger().info("No Location for " + areaName + " found. Use /locations set " + areaName);
+                    CrownAreaReset.log.warn("no location found for area '" + areaName + "'. use /location to create it.");
                 } else {
                     area.setCenter(LocationHandler.getLocation(areaName));
                 }
@@ -265,7 +269,7 @@ public final class AreaHandler {
 
         for (final Area area : areas.values()) {
             configuration.set("area." + area.getAreaName() + ".displayName", area.getDisplayName());
-            configuration.set("area." + area.getAreaName() + ".schematicName", area.getSchematicName());
+            configuration.set("area." + area.getAreaName() + ".schematics", area.getSchematicNames());
             configuration.set("area." + area.getAreaName() + ".resetTime", area.getResetTime());
             configuration.set("area." + area.getAreaName() + ".lastReset", area.getLastReset());
             configuration.set("area." + area.getAreaName() + ".lastReset", area.getLastReset());
