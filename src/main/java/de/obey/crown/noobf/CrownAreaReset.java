@@ -11,9 +11,6 @@ import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.listener.CoreStart;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 public final class CrownAreaReset extends JavaPlugin {
 
     public static CrownAreaReset getInstance() {

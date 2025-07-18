@@ -10,7 +10,6 @@ repositories {
     mavenLocal()
 
     maven { url "https://maven.enginehub.org/repo/" }
-    maven { url = uri("https://repo.papermc.io/repository/maven-public/") }
 
     maven {
         name = "papermc-repo"

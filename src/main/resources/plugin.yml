@@ -1,10 +1,14 @@
 name: CrownAreaReset
-version: 1.0.3
+version: 1.0.4
 author: Obey
 website: https://builtbybit.com/resources/areareset.61809/
 
 main: de.obey.crown.noobf.CrownAreaReset
 api-version: '1.20'
+
+depends:
+  - CrownCore
+
 commands:
   crownareareset:
     aliases: [car]
