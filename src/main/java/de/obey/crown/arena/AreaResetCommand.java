@@ -48,11 +48,12 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
         if(!messanger.hasPermission(sender, "car.admin"))
             return false;
 
-        if(!(sender instanceof Player player))
-            return false;
-
         if(args.length == 2) {
             if(args[0].equalsIgnoreCase("create")) {
+
+                if(!(sender instanceof Player player))
+                    return false;
+
                 final String areaName = args[1];
 
                 if(areaHandler.exist(areaName)) {
@@ -96,6 +97,10 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
             }
 
             if(args[0].equalsIgnoreCase("setlocation")) {
+
+                if(!(sender instanceof Player player))
+                    return false;
+
                 final String areaName = args[1];
 
                 if(!areaHandler.exist(areaName)) {
@@ -162,7 +167,7 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
         final ArrayList<String> list = new ArrayList<>();
 
-        if(!(sender instanceof Player player))
+        if(!(sender instanceof Player))
             return list;
 
         if(!sender.hasPermission("car.admin"))

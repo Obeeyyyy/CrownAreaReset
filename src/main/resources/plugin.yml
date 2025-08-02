@@ -1,5 +1,5 @@
 name: CrownAreaReset
-version: 1.0.4
+version: 1.0.5
 author: Obey
 website: https://builtbybit.com/resources/areareset.61809/
 
@@ -13,4 +13,4 @@ commands:
   crownareareset:
     aliases: [car]
 
-
+k
