@@ -1,5 +1,6 @@
 plugins {
     java
+    id("com.github.johnrengelman.shadow") version "8.0.0"
 }
 
 group = "de.obey.crown"
@@ -21,7 +22,6 @@ val pluginName: String by lazy {
 
 version = pluginVersion
 
-
 repositories {
     mavenCentral()
     mavenLocal()
@@ -40,12 +40,13 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.projectlombok:lombok:1.18.32")
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
+
+    implementation("org.bstats:bstats-bukkit:3.0.2")
 }
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    toolchain.vendor.set(JvmVendorSpec.ADOPTIUM)
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -57,3 +58,17 @@ tasks.withType<Jar>().configureEach {
     archiveBaseName.set(pluginName)
     archiveVersion.set(pluginVersion)
 }
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+    relocate("org.bstats", "${project.group}.noobf.bstats")
+}
+
+tasks.named<Jar>("jar") {
+    enabled = false
+}
+
+tasks.named("build") {
+    dependsOn(tasks.shadowJar)
+}
+

@@ -52,7 +52,7 @@ public final class Placeholders extends PlaceholderExpansion {
                 if(area == null)
                     return "invalid area";
 
-                return TextUtil.formatTimeString(area.getResetTime() - (System.currentTimeMillis() - area.getLastReset()), true, false);
+                return TextUtil.formatTimeString(area.getResetTime() - (System.currentTimeMillis() - area.getLastReset()));
             }
         }
 

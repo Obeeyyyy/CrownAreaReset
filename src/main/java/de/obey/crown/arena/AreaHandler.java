@@ -122,9 +122,13 @@ public final class AreaHandler {
                         final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 10 : 0;
                         player.setVelocity(new Vector(0, (20 + boost), 0));
 
-                        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 4, 10));
-                        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 4, 10));
-                        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 20 * 10, 1));
+                        for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
+                            try {
+                                player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
+                            }catch (final NullPointerException exception) {
+                                CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
+                            }
+                        }
 
                         sounds.playSoundToPlayer(player, "pushback-1");
                         sounds.playSoundToPlayer(player, "pushback-2");

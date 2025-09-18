@@ -5,6 +5,7 @@ package de.obey.crown.arena;
 
 import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.core.handler.LocationHandler;
+import de.obey.crown.core.util.TextUtil;
 import de.obey.crown.noobf.CrownAreaReset;
 import de.obey.crown.noobf.PluginConfig;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,25 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        if(!messanger.hasPermission(sender, "car.admin"))
+        if(!messanger.hasPermission(sender, "car.admin")) {
             return false;
+        }
+
+        if(args.length == 1) {
+            if(args[0].equalsIgnoreCase("list")) {
+                messanger.sendNonConfigMessage(sender, "%prefix% There are " + areaHandler.getAreas().size()+ " arena" + (areaHandler.getAreas().size() != 1 ? "s" : "") + ".");
+
+                areaHandler.getAreas().values().forEach(arena -> {
+                    messanger.sendNonConfigMessage(sender, " : " + arena.getAreaName());
+                    messanger.sendNonConfigMessage(sender, "   -> display name: " + arena.getDisplayName());
+                    messanger.sendNonConfigMessage(sender, "   -> reset time: " + TextUtil.formatTimeString(arena.getResetTime()));
+                    messanger.sendNonConfigMessage(sender, "   -> schematics:");
+                    for (String schematicName : arena.getSchematicNames()) {
+                        messanger.sendNonConfigMessage(sender, "    - " + schematicName);
+                    }
+                });
+            }
+        }
 
         if(args.length == 2) {
             if(args[0].equalsIgnoreCase("create")) {
@@ -183,6 +201,7 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
             list.add("setdisplayname");
             list.add("setresettime");
             list.add("reset");
+            list.add("list");
         }
 
         if(args.length == 2) {

@@ -9,6 +9,7 @@ import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.arena.AreaHandler;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.listener.CoreStart;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class CrownAreaReset extends JavaPlugin {
@@ -41,6 +42,8 @@ public final class CrownAreaReset extends JavaPlugin {
         new Placeholders(areaHandler).register();
 
         getServer().getPluginManager().registerEvents(new CoreStart(), this);
+
+        initializeMetrics();
     }
 
     public void load() {
@@ -56,7 +59,11 @@ public final class CrownAreaReset extends JavaPlugin {
         getCommand("crownareareset").setExecutor(command);
         getCommand("crownareareset").setTabCompleter(command);
     }
-    
+
+    private void initializeMetrics() {
+        new Metrics(this, 25050);
+    }
+
     public void loadListener() {}
 
     @Override

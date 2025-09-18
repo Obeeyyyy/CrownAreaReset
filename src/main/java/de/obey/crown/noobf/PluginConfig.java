@@ -11,11 +11,15 @@ import lombok.Setter;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter @Setter
 public final class PluginConfig extends CrownConfig {
 
     private boolean broadcasetRegen, enablePlayerPushbackOnRegen;
     private int broadcastRadius;
+    private List<String> pushbackEffects;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);
@@ -26,12 +30,12 @@ public final class PluginConfig extends CrownConfig {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(getConfigFile());
 
         setBroadcasetRegen(FileUtil.getBoolean(configuration, "area-regen-broadcast", true));
-        setEnablePlayerPushbackOnRegen(FileUtil.getBoolean(configuration, "enable-player-pushback-on-regen", true));
+        setEnablePlayerPushbackOnRegen(FileUtil.getBoolean(configuration, "player-pushback.enabled", true));
+        setPushbackEffects(FileUtil.getStringArrayList(configuration, "player-pushback.effects", new ArrayList<>()));
 
         saveConfig();
     }
 
     @Override
-    public void saveConfig() {
-    }
+    public void saveConfig() {}
 }
