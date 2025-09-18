@@ -5,6 +5,7 @@ website: https://builtbybit.com/resources/areareset.61809/
 
 main: de.obey.crown.noobf.CrownAreaReset
 api-version: '1.20'
+folia-supported: true
 
 depends:
   - CrownCore
@@ -12,5 +13,3 @@ depends:
 commands:
   crownareareset:
     aliases: [car]
-
-k
