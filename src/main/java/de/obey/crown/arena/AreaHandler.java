@@ -24,9 +24,11 @@ import de.obey.crown.core.data.plugin.Messanger;
 import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.util.FileUtil;
+import de.obey.crown.core.util.Scheduler;
 import de.obey.crown.core.util.TextUtil;
 import de.obey.crown.noobf.CrownAreaReset;
 import de.obey.crown.noobf.PluginConfig;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
@@ -36,7 +38,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.io.File;
@@ -54,16 +55,17 @@ public final class AreaHandler {
     private final Sounds sounds;
 
     @Getter
-    private BukkitTask runnable;
+    private ScheduledTask scheduledTask;
 
     @Getter
     private final Map<String, Area> areas = Maps.newConcurrentMap();
 
     public void run() {
-        runnable = Bukkit.getScheduler().runTaskTimerAsynchronously(CrownAreaReset.getInstance(), () -> {
 
-            if(areas.isEmpty())
+        scheduledTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(CrownAreaReset.getInstance(), (task) -> {
+            if(areas.isEmpty()) {
                 return;
+            }
 
             for (final Area area : areas.values()) {
                 if(pluginConfig.isBroadcasetRegen()) {
@@ -77,7 +79,6 @@ public final class AreaHandler {
                     resetArea(area);
                 }
             }
-
         }, 20, 20);
     }
 
@@ -112,7 +113,7 @@ public final class AreaHandler {
 
         area.setLastReset(System.currentTimeMillis());
 
-        Bukkit.getScheduler().runTask(CrownAreaReset.getInstance(), () -> {
+       Scheduler.runTask(CrownAreaReset.getInstance(), () -> {
             if(pluginConfig.isEnablePlayerPushbackOnRegen()) {
                 for (final Entity entity : area.getCenter().getWorld().getEntities()) {
                     if (!(entity instanceof Player player))
@@ -136,9 +137,7 @@ public final class AreaHandler {
                 }
             }
 
-            Bukkit.getScheduler().runTaskLater(CrownAreaReset.getInstance(), () -> {
-                pasteSchematic(area);
-            }, 10);
+            Scheduler.runTaskLater(CrownAreaReset.getInstance(), () -> pasteSchematic(area), 10);
         });
     }
 

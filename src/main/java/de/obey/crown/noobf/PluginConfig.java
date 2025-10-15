@@ -20,6 +20,7 @@ public final class PluginConfig extends CrownConfig {
     private boolean broadcasetRegen, enablePlayerPushbackOnRegen;
     private int broadcastRadius;
     private List<String> pushbackEffects;
+    private String timeFormat;
 
     public PluginConfig(@NonNull Plugin plugin) {
         super(plugin);
@@ -32,6 +33,7 @@ public final class PluginConfig extends CrownConfig {
         setBroadcasetRegen(FileUtil.getBoolean(configuration, "area-regen-broadcast", true));
         setEnablePlayerPushbackOnRegen(FileUtil.getBoolean(configuration, "player-pushback.enabled", true));
         setPushbackEffects(FileUtil.getStringArrayList(configuration, "player-pushback.effects", new ArrayList<>()));
+        setTimeFormat(FileUtil.getString(configuration, "time-format", "mm:ss"));
 
         saveConfig();
     }

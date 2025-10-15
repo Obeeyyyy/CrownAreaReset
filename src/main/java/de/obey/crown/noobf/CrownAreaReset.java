@@ -39,7 +39,9 @@ public final class CrownAreaReset extends JavaPlugin {
         areaHandler = new AreaHandler(pluginConfig, messanger, sounds);
         areaHandler.run();
 
-        new Placeholders(areaHandler).register();
+        if(getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new Placeholders(pluginConfig, areaHandler).register();
+        }
 
         getServer().getPluginManager().registerEvents(new CoreStart(), this);
 
@@ -68,6 +70,5 @@ public final class CrownAreaReset extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        areaHandler.getRunnable().cancel();
     }
 }

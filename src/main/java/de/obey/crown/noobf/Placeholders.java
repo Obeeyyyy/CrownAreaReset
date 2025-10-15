@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 @RequiredArgsConstructor
 public final class Placeholders extends PlaceholderExpansion {
 
+    private final PluginConfig pluginConfig;
     private final AreaHandler areaHandler;
 
     @Override
@@ -52,7 +53,7 @@ public final class Placeholders extends PlaceholderExpansion {
                 if(area == null)
                     return "invalid area";
 
-                return TextUtil.formatTimeString(area.getResetTime() - (System.currentTimeMillis() - area.getLastReset()));
+                return TextUtil.formatTimeStringWithFormat(area.getResetTime() - (System.currentTimeMillis() - area.getLastReset()),pluginConfig.getTimeFormat());
             }
         }
 

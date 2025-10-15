@@ -8,6 +8,8 @@
 # enable the regen broadcast messages
 area-regen-broadcast: true
 
+time-format: "mm:ss"
+
 player-pushback:
   enabled: true # disable this if you dont want the players to be pushed up when the area is regenerating
   effects: # set the effects players get when boosted up

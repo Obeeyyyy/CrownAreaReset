@@ -1,5 +1,5 @@
 name: CrownAreaReset
-version: 1.0.7
+version: 1.0.8
 author: Obey
 website: https://builtbybit.com/resources/areareset.61809/
 
@@ -7,8 +7,13 @@ main: de.obey.crown.noobf.CrownAreaReset
 api-version: '1.20'
 folia-supported: true
 
+softdepend:
+  - PlaceholderAPI
+
 depends:
   - CrownCore
+  - FastAsyncWorldEdit
+  - WorldGuard
 
 commands:
   crownareareset:
