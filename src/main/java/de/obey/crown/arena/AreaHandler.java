@@ -113,11 +113,12 @@ public final class AreaHandler {
 
         area.setLastReset(System.currentTimeMillis());
 
-       Scheduler.runTask(CrownAreaReset.getInstance(), () -> {
+       Scheduler.runGlobalTask(CrownAreaReset.getInstance(), () -> {
             if(pluginConfig.isEnablePlayerPushbackOnRegen()) {
                 for (final Entity entity : area.getCenter().getWorld().getEntities()) {
-                    if (!(entity instanceof Player player))
+                    if (!(entity instanceof Player player)) {
                         continue;
+                    }
 
                     if (isPlayerInRegion(player, area.getAreaName())) {
                         final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 10 : 0;
@@ -137,7 +138,7 @@ public final class AreaHandler {
                 }
             }
 
-            Scheduler.runTaskLater(CrownAreaReset.getInstance(), () -> pasteSchematic(area), 10);
+            Scheduler.runGlobalTaskLater(CrownAreaReset.getInstance(), () -> pasteSchematic(area), 10);
         });
     }
 
@@ -204,8 +205,9 @@ public final class AreaHandler {
     private void broadcadstMessageToRegions(final Area area, final String messageKey, final String[] keys, final String... values) {
         Bukkit.getScheduler().runTask(CrownAreaReset.getInstance(), () -> {
             for (final Entity entity : area.getCenter().getWorld().getEntities()) {
-                if (!(entity instanceof Player player))
+                if (!(entity instanceof Player player)) {
                     continue;
+                }
 
                 if (isPlayerInRegion(player, area.getAreaName())) {
                     messanger.sendMessage(player, messageKey, keys, values);
