@@ -203,7 +203,7 @@ public final class AreaHandler {
     }
 
     private void broadcadstMessageToRegions(final Area area, final String messageKey, final String[] keys, final String... values) {
-        Bukkit.getScheduler().runTask(CrownAreaReset.getInstance(), () -> {
+        Scheduler.runGlobalTask(CrownAreaReset.getInstance(), () -> {
             for (final Entity entity : area.getCenter().getWorld().getEntities()) {
                 if (!(entity instanceof Player player)) {
                     continue;
