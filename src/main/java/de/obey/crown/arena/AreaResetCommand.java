@@ -165,8 +165,9 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
 
                 final long millis = messanger.isValidInt(sender, args[2], 100);
 
-                if(millis < 100)
+                if(millis < 100) {
                     return false;
+                }
 
                 final Area area = areaHandler.getAreas().get(areaName);
 

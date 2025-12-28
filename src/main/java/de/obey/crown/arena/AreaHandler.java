@@ -71,7 +71,7 @@ public final class AreaHandler {
                 if(pluginConfig.isBroadcasetRegen()) {
                     final long remainingTime = area.getResetTime() - (System.currentTimeMillis() - area.getLastReset());
                     if (remainingTime <= 5000 && remainingTime >= 1000) {
-                        broadcadstMessageToRegions(area, "area-regen-timer", new String[]{"area", "time"}, area.getDisplayName(), TextUtil.formatTimeString(remainingTime));
+                        broadcadstMessageToRegions(area, "area-regen-timer", new String[]{"area", "time"}, area.getDisplayName(), TextUtil.formatTimeStringWithFormat(remainingTime, pluginConfig.getTimeFormat()));
                     }
                 }
 
@@ -121,7 +121,7 @@ public final class AreaHandler {
                     }
 
                     if (isPlayerInRegion(player, area.getAreaName())) {
-                        final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 10 : 0;
+                        final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 14 : 0;
                         player.setVelocity(new Vector(0, (20 + boost), 0));
 
                         for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {

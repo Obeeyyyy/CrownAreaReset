@@ -21,8 +21,9 @@ public final class Area {
     private final Random random = new Random();
 
     public String getRandomSchematicName() {
-        if(schematicNames.isEmpty())
+        if(schematicNames.isEmpty()) {
             return areaName;
+        }
 
         return schematicNames.get(random.nextInt(schematicNames.size()));
     }
