@@ -16,3 +16,7 @@ player-pushback:
     - BLINDNESS
     - SLOW_FALLING
     - SLOW
+
+teleport-on-regen:
+  enabled: false
+  location: "spawn"

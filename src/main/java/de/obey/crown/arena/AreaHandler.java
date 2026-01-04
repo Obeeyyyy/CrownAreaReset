@@ -25,6 +25,7 @@ import de.obey.crown.core.data.plugin.sound.Sounds;
 import de.obey.crown.core.handler.LocationHandler;
 import de.obey.crown.core.util.FileUtil;
 import de.obey.crown.core.util.Scheduler;
+import de.obey.crown.core.util.Teleporter;
 import de.obey.crown.core.util.TextUtil;
 import de.obey.crown.noobf.CrownAreaReset;
 import de.obey.crown.noobf.PluginConfig;
@@ -34,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -63,19 +65,19 @@ public final class AreaHandler {
     public void run() {
 
         scheduledTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(CrownAreaReset.getInstance(), (task) -> {
-            if(areas.isEmpty()) {
+            if (areas.isEmpty()) {
                 return;
             }
 
             for (final Area area : areas.values()) {
-                if(pluginConfig.isBroadcasetRegen()) {
+                if (pluginConfig.isBroadcastRegen()) {
                     final long remainingTime = area.getResetTime() - (System.currentTimeMillis() - area.getLastReset());
                     if (remainingTime <= 5000 && remainingTime >= 1000) {
                         broadcadstMessageToRegions(area, "area-regen-timer", new String[]{"area", "time"}, area.getDisplayName(), TextUtil.formatTimeStringWithFormat(remainingTime, pluginConfig.getTimeFormat()));
                     }
                 }
 
-                if(System.currentTimeMillis() - area.getLastReset() >= area.getResetTime()) {
+                if (System.currentTimeMillis() - area.getLastReset() >= area.getResetTime()) {
                     resetArea(area);
                 }
             }
@@ -108,18 +110,24 @@ public final class AreaHandler {
     }
 
     public void resetArea(final Area area) {
-        if(area.getCenter() == null)
+        if (area.getCenter() == null)
             return;
 
         area.setLastReset(System.currentTimeMillis());
 
-       Scheduler.runGlobalTask(CrownAreaReset.getInstance(), () -> {
-            if(pluginConfig.isEnablePlayerPushbackOnRegen()) {
-                for (final Entity entity : area.getCenter().getWorld().getEntities()) {
-                    if (!(entity instanceof Player player)) {
-                        continue;
-                    }
+        for (final Entity entity : area.getCenter().getWorld().getEntities()) {
 
+            if (!(entity instanceof Player player)) {
+
+                if (entity instanceof EnderCrystal crystal) {
+                    Scheduler.runEntityTask(CrownAreaReset.getInstance(), crystal, () -> crystal.remove());
+                }
+
+                continue;
+            }
+
+            if (pluginConfig.isEnablePlayerPushbackOnRegen()) {
+                Scheduler.runEntityTask(CrownAreaReset.getInstance(), player, () -> {
                     if (isPlayerInRegion(player, area.getAreaName())) {
                         final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 14 : 0;
                         player.setVelocity(new Vector(0, (20 + boost), 0));
@@ -127,7 +135,7 @@ public final class AreaHandler {
                         for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
                             try {
                                 player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
-                            }catch (final NullPointerException exception) {
+                            } catch (final NullPointerException exception) {
                                 CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
                             }
                         }
@@ -135,12 +143,18 @@ public final class AreaHandler {
                         sounds.playSoundToPlayer(player, "pushback-1");
                         sounds.playSoundToPlayer(player, "pushback-2");
                     }
-                }
+                });
             }
 
-            Scheduler.runGlobalTaskLater(CrownAreaReset.getInstance(), () -> pasteSchematic(area), 10);
-        });
+            if (pluginConfig.isEnableTeleportOnRegen()) {
+                Teleporter.teleportInstant(player, pluginConfig.getTeleportToLocation());
+            }
+
+        }
+
+        Scheduler.runLocationTaskLater(CrownAreaReset.getInstance(), area.getCenter(), () -> pasteSchematic(area), 10);
     }
+
 
     private void pasteSchematic(final Area area) {
         FaweAPI.getTaskManager().async(() -> {
@@ -162,8 +176,9 @@ public final class AreaHandler {
                 return;
             }
 
-            try (FileInputStream fis = new FileInputStream(schematicFile)) {
+            try (final FileInputStream fis = new FileInputStream(schematicFile)) {
                 final ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
+
                 if (format == null) {
                     CrownAreaReset.log.warn("invalid format for '" + schematicName + ".schem'");
                     return;
@@ -188,28 +203,30 @@ public final class AreaHandler {
                             .ignoreAirBlocks(false)
                             .build()
                     );
-                } catch (WorldEditException e) {
-                    throw new RuntimeException(e);
+
+                } catch (final WorldEditException exception) {
+                    throw new RuntimeException(exception);
                 }
 
-                if (pluginConfig.isBroadcasetRegen()) {
+                if (pluginConfig.isBroadcastRegen())
                     broadcadstMessageToRegions(area, "area-regenerated", new String[]{"area", "time"}, area.getDisplayName(), TextUtil.formatNumber((System.currentTimeMillis() - started)));
-                }
 
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (final IOException exception) {
+                exception.printStackTrace();
             }
         });
     }
 
     private void broadcadstMessageToRegions(final Area area, final String messageKey, final String[] keys, final String... values) {
-        Scheduler.runGlobalTask(CrownAreaReset.getInstance(), () -> {
+        Scheduler.runLocationTask(CrownAreaReset.getInstance(), area.getCenter(), () -> {
             for (final Entity entity : area.getCenter().getWorld().getEntities()) {
-                if (!(entity instanceof Player player)) {
+
+                if (!(entity instanceof Player player))
                     continue;
-                }
 
                 if (isPlayerInRegion(player, area.getAreaName())) {
+
+
                     messanger.sendMessage(player, messageKey, keys, values);
                     sounds.playSoundToPlayer(player, "area-reset");
                 }
@@ -237,11 +254,11 @@ public final class AreaHandler {
 
         areas.clear();
 
-        if(!configuration.contains("area"))
+        if (!configuration.contains("area"))
             return;
 
         final Set<String> areaNames = configuration.getConfigurationSection("area").getKeys(false);
-        if(!areaNames.isEmpty()) {
+        if (!areaNames.isEmpty()) {
 
             for (final String areaName : areaNames) {
                 Area area = new Area();
@@ -267,9 +284,9 @@ public final class AreaHandler {
     public void saveAreas() {
         final YamlConfiguration configuration = YamlConfiguration.loadConfiguration(pluginConfig.getConfigFile());
 
-        configuration.set("area",null);
+        configuration.set("area", null);
 
-        if(areas.isEmpty())
+        if (areas.isEmpty())
             return;
 
         for (final Area area : areas.values()) {
