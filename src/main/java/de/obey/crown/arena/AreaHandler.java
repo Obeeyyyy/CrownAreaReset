@@ -218,6 +218,9 @@ public final class AreaHandler {
     }
 
     private void broadcadstMessageToRegions(final Area area, final String messageKey, final String[] keys, final String... values) {
+        if(area.getCenter() == null)
+            return;
+
         Scheduler.runLocationTask(CrownAreaReset.getInstance(), area.getCenter(), () -> {
             for (final Entity entity : area.getCenter().getWorld().getEntities()) {
 
