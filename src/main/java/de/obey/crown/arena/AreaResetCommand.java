@@ -46,9 +46,8 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        if(!messanger.hasPermission(sender, "car.admin")) {
+        if(!messanger.hasPermission(sender, "car.admin"))
             return false;
-        }
 
         if(args.length == 1) {
             if(args[0].equalsIgnoreCase("list")) {
@@ -154,7 +153,9 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
                 messanger.sendMessage(sender, "area-edit", new String[]{"area", "value"}, areaName, "displayname");
                 return false;
             }
+        }
 
+        if(args.length >= 3) {
             if(args[0].equalsIgnoreCase("setresettime")) {
                 final String areaName = args[1];
 
@@ -163,15 +164,40 @@ public final class AreaResetCommand implements CommandExecutor, TabCompleter {
                     return false;
                 }
 
-                final long millis = messanger.isValidInt(sender, args[2], 100);
+                long amount = -1;
 
-                if(millis < 100) {
+                if (args.length == 3) {
+
+                    long parsedNumber = messanger.isValidInt(args[2]);
+
+                    if (parsedNumber >= 0) {
+                        amount = parsedNumber;
+                    } else {
+                        amount = TextUtil.parseDurationStringToMillis(args[2]);
+                    }
+
+                } else {
+                    final StringBuilder sb = new StringBuilder();
+                    for (int i = 2; i < args.length; i++) {
+                        sb.append(args[i]).append(" ");
+                    }
+
+                    final String durationString = sb.toString().trim();
+                    amount = TextUtil.parseDurationStringToMillis(durationString);
+                }
+
+                if (amount < 10000) {
+                    messanger.sendMessage(sender, "invalid-input", new String[]{"format"}, "1d 10m 10s or any number in ms (make sure its more than 10s)");
                     return false;
                 }
 
                 final Area area = areaHandler.getAreas().get(areaName);
 
-                area.setResetTime(millis);
+                area.setResetTime(amount);
+
+                if(area.getLastReset() - amount <= System.currentTimeMillis())
+                    area.setLastReset(System.currentTimeMillis());
+
                 areaHandler.saveAreas();
 
                 messanger.sendMessage(sender, "area-edit", new String[]{"area", "value"}, areaName, "resetTime");
