@@ -17,6 +17,7 @@ public final class Area {
     private long lastReset, resetTime;
     private Location center;
     private List<String> schematicNames;
+    private boolean clearCrystals, clearItemDrops, clearMobs, clearArmorStands;
 
     private final Random random = new Random();
 

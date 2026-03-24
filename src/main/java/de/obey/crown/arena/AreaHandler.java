@@ -35,9 +35,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.EnderCrystal;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -102,6 +100,10 @@ public final class AreaHandler {
         area.setResetTime(1000 * 60 * 20);
         area.setCenter(player.getLocation());
         area.setLastReset(System.currentTimeMillis());
+        area.setClearArmorStands(true);
+        area.setClearCrystals(true);
+        area.setClearItemDrops(true);
+        area.setClearMobs(true);
 
         LocationHandler.setLocation(areaName, player.getLocation());
 
@@ -115,41 +117,55 @@ public final class AreaHandler {
 
         area.setLastReset(System.currentTimeMillis());
 
-        for (final Entity entity : area.getCenter().getWorld().getEntities()) {
+        if (area.isClearArmorStands() || area.isClearCrystals() || area.isClearMobs() || area.isClearItemDrops()) {
 
-            if (!(entity instanceof Player player)) {
+            for (final Entity entity : area.getCenter().getWorld().getEntities()) {
 
-                if (entity instanceof EnderCrystal crystal) {
-                    Scheduler.runEntityTask(CrownAreaReset.getInstance(), crystal, () -> crystal.remove());
+                if (!(entity instanceof Player player)) {
+
+                    Scheduler.runEntityTask(CrownAreaReset.getInstance(), entity, () -> {
+                        if (entity instanceof EnderCrystal && area.isClearCrystals())
+                            entity.remove();
+
+
+                        if (entity instanceof Item && area.isClearItemDrops())
+                            entity.remove();
+
+                        if (entity instanceof LivingEntity && area.isClearMobs())
+                            entity.remove();
+
+                        if (entity instanceof ArmorStand && area.isClearArmorStands())
+                            entity.remove();
+                    });
+
+                    continue;
                 }
 
-                continue;
-            }
+                if (pluginConfig.isEnablePlayerPushbackOnRegen()) {
+                    Scheduler.runEntityTask(CrownAreaReset.getInstance(), player, () -> {
+                        if (isPlayerInRegion(player, area.getAreaName())) {
+                            final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 14 : 0;
+                            player.setVelocity(new Vector(0, (20 + boost), 0));
 
-            if (pluginConfig.isEnablePlayerPushbackOnRegen()) {
-                Scheduler.runEntityTask(CrownAreaReset.getInstance(), player, () -> {
-                    if (isPlayerInRegion(player, area.getAreaName())) {
-                        final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 14 : 0;
-                        player.setVelocity(new Vector(0, (20 + boost), 0));
-
-                        for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
-                            try {
-                                player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
-                            } catch (final NullPointerException exception) {
-                                CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
+                            for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
+                                try {
+                                    player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
+                                } catch (final NullPointerException exception) {
+                                    CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
+                                }
                             }
+
+                            sounds.playSoundToPlayer(player, "pushback-1");
+                            sounds.playSoundToPlayer(player, "pushback-2");
                         }
+                    });
+                }
 
-                        sounds.playSoundToPlayer(player, "pushback-1");
-                        sounds.playSoundToPlayer(player, "pushback-2");
-                    }
-                });
+                if (pluginConfig.isEnableTeleportOnRegen()) {
+                    Teleporter.teleportInstant(player, pluginConfig.getTeleportToLocation());
+                }
+
             }
-
-            if (pluginConfig.isEnableTeleportOnRegen()) {
-                Teleporter.teleportInstant(player, pluginConfig.getTeleportToLocation());
-            }
-
         }
 
         Scheduler.runLocationTaskLater(CrownAreaReset.getInstance(), area.getCenter(), () -> pasteSchematic(area), 10);
@@ -218,7 +234,7 @@ public final class AreaHandler {
     }
 
     private void broadcadstMessageToRegions(final Area area, final String messageKey, final String[] keys, final String... values) {
-        if(area.getCenter() == null)
+        if (area.getCenter() == null)
             return;
 
         Scheduler.runLocationTask(CrownAreaReset.getInstance(), area.getCenter(), () -> {
@@ -264,13 +280,17 @@ public final class AreaHandler {
         if (!areaNames.isEmpty()) {
 
             for (final String areaName : areaNames) {
-                Area area = new Area();
+                final Area area = new Area();
 
                 area.setAreaName(areaName);
                 area.setDisplayName(FileUtil.getString(configuration, "area." + areaName + ".displayName", "&f&l" + areaName));
                 area.setSchematicNames(FileUtil.getStringArrayList(configuration, "area." + areaName + ".schematics", List.of(areaName)));
                 area.setLastReset(FileUtil.getLong(configuration, "area." + areaName + ".lastReset", System.currentTimeMillis()));
                 area.setResetTime(FileUtil.getLong(configuration, "area." + areaName + ".resetTime", 50000));
+                area.setClearMobs(FileUtil.getBoolean(configuration, "area." + areaName + ".clear-mobs", true));
+                area.setClearCrystals(FileUtil.getBoolean(configuration, "area." + areaName + ".clear-crystals", true));
+                area.setClearItemDrops(FileUtil.getBoolean(configuration, "area." + areaName + ".clear-item-drops", true));
+                area.setClearArmorStands(FileUtil.getBoolean(configuration, "area." + areaName + ".clear-armor-stands", true));
 
                 final Location center = LocationHandler.getLocation(areaName);
                 if (center == null) {
@@ -282,6 +302,8 @@ public final class AreaHandler {
                 areas.put(areaName, area);
             }
         }
+
+        FileUtil.saveConfigurationIntoFile(configuration, pluginConfig.getConfigFile());
     }
 
     public void saveAreas() {
@@ -297,7 +319,10 @@ public final class AreaHandler {
             configuration.set("area." + area.getAreaName() + ".schematics", area.getSchematicNames());
             configuration.set("area." + area.getAreaName() + ".resetTime", area.getResetTime());
             configuration.set("area." + area.getAreaName() + ".lastReset", area.getLastReset());
-            configuration.set("area." + area.getAreaName() + ".lastReset", area.getLastReset());
+            configuration.set("area." + area.getAreaName() + ".clear-mobs", area.isClearMobs());
+            configuration.set("area." + area.getAreaName() + ".clear-crystals", area.isClearCrystals());
+            configuration.set("area." + area.getAreaName() + ".clear-item-drops", area.isClearItemDrops());
+            configuration.set("area." + area.getAreaName() + ".clear-armor-stands", area.isClearArmorStands());
         }
 
         FileUtil.saveConfigurationIntoFile(configuration, pluginConfig.getConfigFile());
