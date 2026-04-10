@@ -1,11 +1,11 @@
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version "8.0.0"
+    id("com.gradleup.shadow") version "9.4.1"
 }
 
 group = "de.obey.crown"
 version = "1.0.0"
-val targetJavaVersion = 17
+val targetJavaVersion = 21
 
 val pluginYml = file("src/main/resources/plugin.yml")
 val pluginVersion: String by lazy {

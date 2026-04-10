@@ -117,16 +117,19 @@ public final class AreaHandler {
 
         area.setLastReset(System.currentTimeMillis());
 
-        if (area.isClearArmorStands() || area.isClearCrystals() || area.isClearMobs() || area.isClearItemDrops()) {
 
-            for (final Entity entity : area.getCenter().getWorld().getEntities()) {
+        for (final Entity entity : area.getCenter().getWorld().getEntities()) {
 
-                if (!(entity instanceof Player player)) {
+            if (!(entity instanceof Player player)) {
+
+                if (area.isClearArmorStands() || area.isClearCrystals() || area.isClearMobs() || area.isClearItemDrops()) {
 
                     Scheduler.runEntityTask(CrownAreaReset.getInstance(), entity, () -> {
+                        if (!isEntityInRegion(entity, area.getAreaName()))
+                            return;
+
                         if (entity instanceof EnderCrystal && area.isClearCrystals())
                             entity.remove();
-
 
                         if (entity instanceof Item && area.isClearItemDrops())
                             entity.remove();
@@ -137,35 +140,35 @@ public final class AreaHandler {
                         if (entity instanceof ArmorStand && area.isClearArmorStands())
                             entity.remove();
                     });
-
-                    continue;
                 }
 
-                if (pluginConfig.isEnablePlayerPushbackOnRegen()) {
-                    Scheduler.runEntityTask(CrownAreaReset.getInstance(), player, () -> {
-                        if (isPlayerInRegion(player, area.getAreaName())) {
-                            final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 14 : 0;
-                            player.setVelocity(new Vector(0, (20 + boost), 0));
-
-                            for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
-                                try {
-                                    player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
-                                } catch (final NullPointerException exception) {
-                                    CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
-                                }
-                            }
-
-                            sounds.playSoundToPlayer(player, "pushback-1");
-                            sounds.playSoundToPlayer(player, "pushback-2");
-                        }
-                    });
-                }
-
-                if (pluginConfig.isEnableTeleportOnRegen()) {
-                    Teleporter.teleportInstant(player, pluginConfig.getTeleportToLocation());
-                }
-
+                continue;
             }
+
+            if (pluginConfig.isEnablePlayerPushbackOnRegen()) {
+                Scheduler.runEntityTask(CrownAreaReset.getInstance(), player, () -> {
+                    if (isEntityInRegion(player, area.getAreaName())) {
+                        final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 14 : 0;
+                        player.setVelocity(new Vector(0, (20 + boost), 0));
+
+                        for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
+                            try {
+                                player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
+                            } catch (final NullPointerException exception) {
+                                CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
+                            }
+                        }
+
+                        sounds.playSoundToPlayer(player, "pushback-1");
+                        sounds.playSoundToPlayer(player, "pushback-2");
+                    }
+                });
+            }
+
+            if (pluginConfig.isEnableTeleportOnRegen()) {
+                Teleporter.teleportInstant(player, pluginConfig.getTeleportToLocation());
+            }
+
         }
 
         Scheduler.runLocationTaskLater(CrownAreaReset.getInstance(), area.getCenter(), () -> pasteSchematic(area), 10);
@@ -243,7 +246,7 @@ public final class AreaHandler {
                 if (!(entity instanceof Player player))
                     continue;
 
-                if (isPlayerInRegion(player, area.getAreaName())) {
+                if (isEntityInRegion(player, area.getAreaName())) {
 
 
                     messanger.sendMessage(player, messageKey, keys, values);
@@ -253,8 +256,8 @@ public final class AreaHandler {
         });
     }
 
-    private boolean isPlayerInRegion(final Player player, final String regionName) {
-        final Location loc = player.getLocation();
+    private boolean isEntityInRegion(final Entity entity, final String regionName) {
+        final Location loc = entity.getLocation();
         final RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
         final RegionQuery query = container.createQuery();
         final ApplicableRegionSet regions = query.getApplicableRegions(BukkitAdapter.adapt(loc));
