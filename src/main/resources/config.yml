@@ -5,18 +5,23 @@
 # We are there to assist you.
 #
 
-# enable the regen broadcast messages
+# enable the regeneration broadcast messages
 area-regen-broadcast: true
 
 time-format: "%mm%:%ss%"
 
 player-pushback:
   enabled: true # disable this if you don't want the players to be pushed up when the area is regenerating
+  delay: 0
   effects: # set the effects players get when boosted up
     - BLINDNESS
     - SLOW_FALLING
     - SLOW
 
-teleport-on-regen:
+player-y-teleport:
+  enabled: true
+  delay: 0
+
+player-location-teleport:
   enabled: false
   location: "spawn"

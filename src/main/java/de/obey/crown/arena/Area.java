@@ -15,6 +15,8 @@ public final class Area {
 
     private String areaName, displayName;
     private long lastReset, resetTime;
+    private double yLaunchLocation;
+    private double launchBoost;
     private Location center;
     private List<String> schematicNames;
     private boolean clearCrystals, clearItemDrops, clearMobs, clearArmorStands;

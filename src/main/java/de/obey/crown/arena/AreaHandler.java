@@ -104,6 +104,8 @@ public final class AreaHandler {
         area.setClearCrystals(true);
         area.setClearItemDrops(true);
         area.setClearMobs(true);
+        area.setLaunchBoost(0.2);
+        area.setYLaunchLocation(player.getLocation().getY() + 10);
 
         LocationHandler.setLocation(areaName, player.getLocation());
 
@@ -117,17 +119,15 @@ public final class AreaHandler {
 
         area.setLastReset(System.currentTimeMillis());
 
-
         for (final Entity entity : area.getCenter().getWorld().getEntities()) {
+            if (!isEntityInRegion(entity, area.getAreaName()))
+                continue;
 
             if (!(entity instanceof Player player)) {
 
                 if (area.isClearArmorStands() || area.isClearCrystals() || area.isClearMobs() || area.isClearItemDrops()) {
 
                     Scheduler.runEntityTask(CrownAreaReset.getInstance(), entity, () -> {
-                        if (!isEntityInRegion(entity, area.getAreaName()))
-                            return;
-
                         if (entity instanceof EnderCrystal && area.isClearCrystals())
                             entity.remove();
 
@@ -145,29 +145,63 @@ public final class AreaHandler {
                 continue;
             }
 
+            if(pluginConfig.isEnableYTeleportOnRegen()) {
+                if(pluginConfig.getTeleportYDelay() > 0) {
+                    Scheduler.runEntityTaskLater(CrownAreaReset.getInstance(), player, () -> {
+                        final Location yLaunchLocation = player.getLocation().clone();
+                        yLaunchLocation.setY(area.getYLaunchLocation());
+                        Teleporter.teleportInstant(player, yLaunchLocation);
+                    }, Math.max(1, pluginConfig.getTeleportYDelay()));
+                } else {
+                    final Location yLaunchLocation = player.getLocation().clone();
+                    yLaunchLocation.setY(area.getYLaunchLocation());
+                    Teleporter.teleportInstant(player, yLaunchLocation);
+                }
+            }
+
             if (pluginConfig.isEnablePlayerPushbackOnRegen()) {
-                Scheduler.runEntityTask(CrownAreaReset.getInstance(), player, () -> {
-                    if (isEntityInRegion(player, area.getAreaName())) {
-                        final double boost = area.getCenter().getY() > entity.getLocation().getY() ? (area.getCenter().getY() - entity.getLocation().getY()) + 14 : 0;
-                        player.setVelocity(new Vector(0, (20 + boost), 0));
+                if (area.getLaunchBoost() > 0) {
+                    if(pluginConfig.getPushbackDelay() > 0) {
+                        Scheduler.runEntityTaskLater(CrownAreaReset.getInstance(), player, () -> {
+                            player.setVelocity(new Vector(0, area.getLaunchBoost(), 0));
 
-                        for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
-                            try {
-                                player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
-                            } catch (final NullPointerException exception) {
-                                CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
+                            if (!pluginConfig.getPushbackEffects().isEmpty()) {
+                                for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
+                                    try {
+                                        player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
+                                    } catch (final NullPointerException exception) {
+                                        CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
+                                    }
+                                }
                             }
-                        }
 
-                        sounds.playSoundToPlayer(player, "pushback-1");
-                        sounds.playSoundToPlayer(player, "pushback-2");
+                            sounds.playSoundToPlayer(player, "pushback-1");
+                            sounds.playSoundToPlayer(player, "pushback-2");
+                        }, Math.max(1, pluginConfig.getPushbackDelay()));
+
+                    } else {
+                        Scheduler.runEntityTask(CrownAreaReset.getInstance(), player, () -> {
+                            player.setVelocity(new Vector(0, area.getLaunchBoost(), 0));
+
+                            if (!pluginConfig.getPushbackEffects().isEmpty()) {
+                                for (final String pushbackEffect : pluginConfig.getPushbackEffects()) {
+                                    try {
+                                        player.addPotionEffect(new PotionEffect(PotionEffectType.getByName(pushbackEffect), 20 * 4, 10));
+                                    } catch (final NullPointerException exception) {
+                                        CrownAreaReset.log.warn("Invalid potion effect '" + pushbackEffect + "'");
+                                    }
+                                }
+                            }
+
+                            sounds.playSoundToPlayer(player, "pushback-1");
+                            sounds.playSoundToPlayer(player, "pushback-2");
+                        });
                     }
-                });
+                }
             }
 
-            if (pluginConfig.isEnableTeleportOnRegen()) {
+            if (pluginConfig.isEnableLocationTeleportOnRegen())
                 Teleporter.teleportInstant(player, pluginConfig.getTeleportToLocation());
-            }
 
         }
 
@@ -287,6 +321,8 @@ public final class AreaHandler {
 
                 area.setAreaName(areaName);
                 area.setDisplayName(FileUtil.getString(configuration, "area." + areaName + ".displayName", "&f&l" + areaName));
+                area.setYLaunchLocation(FileUtil.getDouble(configuration, "area." + areaName + ".y-launch-location", 0));
+                area.setLaunchBoost(FileUtil.getDouble(configuration, "area." + areaName + ".launch-boost", 0.0));
                 area.setSchematicNames(FileUtil.getStringArrayList(configuration, "area." + areaName + ".schematics", List.of(areaName)));
                 area.setLastReset(FileUtil.getLong(configuration, "area." + areaName + ".lastReset", System.currentTimeMillis()));
                 area.setResetTime(FileUtil.getLong(configuration, "area." + areaName + ".resetTime", 50000));
@@ -326,6 +362,8 @@ public final class AreaHandler {
             configuration.set("area." + area.getAreaName() + ".clear-crystals", area.isClearCrystals());
             configuration.set("area." + area.getAreaName() + ".clear-item-drops", area.isClearItemDrops());
             configuration.set("area." + area.getAreaName() + ".clear-armor-stands", area.isClearArmorStands());
+            configuration.set("area." + area.getAreaName() + ".y-launch-location", area.getYLaunchLocation());
+            configuration.set("area." + area.getAreaName() + ".launch-boost", area.getLaunchBoost());
         }
 
         FileUtil.saveConfigurationIntoFile(configuration, pluginConfig.getConfigFile());

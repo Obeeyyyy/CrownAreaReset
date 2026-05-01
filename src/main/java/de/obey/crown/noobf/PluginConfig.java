@@ -17,8 +17,8 @@ import java.util.List;
 @Getter @Setter
 public final class PluginConfig extends CrownConfig {
 
-    private boolean broadcastRegen, enablePlayerPushbackOnRegen, enableTeleportOnRegen;
-    private int broadcastRadius;
+    private boolean broadcastRegen, enablePlayerPushbackOnRegen, enableLocationTeleportOnRegen, enableYTeleportOnRegen;
+    private int broadcastRadius, teleportYDelay, pushbackDelay;
     private List<String> pushbackEffects;
     private String timeFormat, teleportToLocation;
 
@@ -32,10 +32,14 @@ public final class PluginConfig extends CrownConfig {
 
         setBroadcastRegen(FileUtil.getBoolean(configuration, "area-regen-broadcast", true));
         setEnablePlayerPushbackOnRegen(FileUtil.getBoolean(configuration, "player-pushback.enabled", true));
-        setEnableTeleportOnRegen(FileUtil.getBoolean(configuration, "teleport-on-regen.enabled", false));
+        setEnableYTeleportOnRegen(FileUtil.getBoolean(configuration, "player-y-teleport.enabled", true));
+        setTeleportYDelay(FileUtil.getInt(configuration, "player-y-teleport.delay", 0));
+        setPushbackDelay(FileUtil.getInt(configuration, "player-pushback.delay", 0));
         setPushbackEffects(FileUtil.getStringArrayList(configuration, "player-pushback.effects", new ArrayList<>()));
         setTimeFormat(FileUtil.getString(configuration, "time-format", "%mm%:%ss%"));
-        setTeleportToLocation(FileUtil.getString(configuration, "teleport-on-regen.location", "spawn"));
+
+        setEnableLocationTeleportOnRegen(FileUtil.getBoolean(configuration, "player-location-teleport.enabled", false));
+        setTeleportToLocation(FileUtil.getString(configuration, "player-location-teleport.location", "spawn"));
 
         saveConfig();
     }
