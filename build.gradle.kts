@@ -25,6 +25,7 @@ version = pluginVersion
 repositories {
     mavenCentral()
     mavenLocal()
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven ("https://maven.enginehub.org/repo/")
     maven ("https://repo.papermc.io/repository/maven-public/")
 }
