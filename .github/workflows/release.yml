@@ -1,0 +1,59 @@
+name: Build and release
+
+on:
+  push:
+    branches: [master]
+    tags: ['*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # CrownCore is a compileOnly dependency resolved from mavenLocal
+      - uses: actions/checkout@v4
+        with:
+          repository: Obeeyyyy/CrownCore
+          path: crowncore
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Build CrownCore
+        run: |
+          # drop the local Windows-only repository, it is not a valid path on Linux
+          sed -i "/D:\/Maven/d" crowncore/build.gradle.kts
+          gradle -p crowncore shadowJar publishToMavenLocal --no-daemon
+
+      - name: Build
+        run: gradle shadowJar --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CrownAreaReset
+          path: build/libs/*.jar
+
+      # Creates a release named after the version in plugin.yml, once per version
+      - name: Release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -m1 '^version:' src/main/resources/plugin.yml | sed 's/^version:[[:space:]]*//' | tr -d "\"' \r")
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION already exists"
+          else
+            gh release create "$VERSION" build/libs/*.jar --title "CrownAreaReset $VERSION" --target "$GITHUB_SHA" --generate-notes
+          fi
