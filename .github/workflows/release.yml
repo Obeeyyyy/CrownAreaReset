@@ -32,7 +32,10 @@ jobs:
           gradle-version: '8.14.3'
 
       - name: Build CrownCore
-        run: gradle -p crowncore shadowJar publishToMavenLocal --no-daemon
+        run: |
+          # drop the local Windows-only repository, it is not a valid path on Linux
+          sed -i "/D:\/Maven/d" crowncore/build.gradle.kts
+          gradle -p crowncore shadowJar publishToMavenLocal --no-daemon
 
       - name: Build
         run: gradle shadowJar --no-daemon
